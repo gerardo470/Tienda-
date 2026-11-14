@@ -21,7 +21,7 @@ export function Confirmar({ abierta, titulo, mensaje, textoSi, textoNo = 'Mejor 
   return (
     <Hoja abierta={abierta} alCerrar={alCancelar} titulo={titulo}>
       <div className="flex items-center gap-3 pb-4">
-        <Llavecita animo={animo} size={84} soloCabeza />
+        <Llavecita animo={animo} size={84} soloCabeza className="shrink-0" />
         <p className="text-[15px] font-bold leading-snug text-suave">{mensaje}</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
