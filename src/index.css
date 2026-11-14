@@ -1,0 +1,95 @@
+@import '@fontsource/nunito/latin-600.css';
+@import '@fontsource/nunito/latin-700.css';
+@import '@fontsource/nunito/latin-800.css';
+@import '@fontsource/baloo-2/latin-700.css';
+@import '@fontsource/baloo-2/latin-800.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Colores que cambian entre modo claro y oscuro */
+:root {
+  --fondo: #fff6e9;
+  --tarjeta: #ffffff;
+  --tinta: #0f3d4a;
+  --suave: #46626b;
+  --borde: #ead9bf;
+  --cabecera: #0f3d4a;
+  --campo: #fffdf8;
+  --coral-bg: #ffe9e5;
+  --coral-fg: #b02f24;
+  --menta-bg: #ddf7ee;
+  --menta-fg: #0a6b4f;
+  --naranja-bg: #ffe3c7;
+  --naranja-fg: #8a3f03;
+  --petroleo-bg: #d5e6ea;
+  --petroleo-fg: #0f3d4a;
+}
+
+.dark {
+  --fondo: #0a2a33;
+  --tarjeta: #123f4c;
+  --tinta: #fff6e9;
+  --suave: #a9c4cb;
+  --borde: #061c22;
+  --cabecera: #061c22;
+  --campo: #0d3340;
+  --coral-bg: rgba(255, 107, 94, 0.2);
+  --coral-fg: #ffa59c;
+  --menta-bg: rgba(60, 207, 160, 0.2);
+  --menta-fg: #7be6c3;
+  --naranja-bg: rgba(255, 138, 31, 0.22);
+  --naranja-fg: #ffb872;
+  --petroleo-bg: rgba(255, 255, 255, 0.12);
+  --petroleo-fg: #cfe3e8;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Los campos de fecha siguen el modo claro/oscuro */
+.dark input[type='date'] {
+  color-scheme: dark;
+}
+
+@layer components {
+  .campo {
+    @apply w-full rounded-2xl border-2 border-borde bg-campo px-4 py-3 text-base font-bold text-tinta outline-none transition-colors placeholder:font-semibold placeholder:text-suave focus:border-naranja;
+  }
+  .etiqueta {
+    @apply mb-1 block text-[13px] font-extrabold uppercase tracking-wide text-suave;
+  }
+  .tarjeta {
+    @apply rounded-4xl bg-tarjeta shadow-relieve;
+  }
+}
+
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+.sin-barra {
+  scrollbar-width: none;
+}

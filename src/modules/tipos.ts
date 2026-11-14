@@ -1,0 +1,18 @@
+import type { ComponentType, ReactNode } from 'react';
+
+/**
+ * Forma que debe tener cada módulo de Llavecita.
+ * Para agregar un módulo nuevo (órdenes de trabajo, clientes, inventario…):
+ *   1. Cree su carpeta en src/modules/<nombre>/ con un index.tsx que exporte un ModuloApp.
+ *   2. Agréguelo a la lista de src/modules/registro.ts.
+ * No hay que tocar nada más: las rutas y la barra inferior se arman solas.
+ */
+export interface ModuloApp {
+  id: string;
+  /** Pantallas del módulo */
+  rutas: { ruta: string; pantalla: ReactNode }[];
+  /** Botones que el módulo pone en la barra inferior */
+  navegacion: { ruta: string; etiqueta: string; Icono: ComponentType<{ size?: number }> }[];
+  /** Estado compartido del módulo (opcional): envuelve toda la app */
+  Proveedor?: ComponentType<{ children: ReactNode }>;
+}
