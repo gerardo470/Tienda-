@@ -45,6 +45,7 @@ function Marco() {
         </motion.div>
       </main>
       <BarraInferior />
+      {modulos.map((m) => m.Vigilante && <m.Vigilante key={m.id} />)}
     </div>
   );
 }

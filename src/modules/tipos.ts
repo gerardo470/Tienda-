@@ -16,6 +16,8 @@ export interface ModuloApp {
   /** Botones que el módulo pone en la barra inferior */
   /** `orden`: posición en la barra (de menor a mayor) */
   navegacion: { ruta: string; etiqueta: string; Icono: ComponentType<{ size?: number }>; orden: number; roles?: Rol[] }[];
+  /** Componente invisible que revisa algo al abrir la app (opcional) */
+  Vigilante?: ComponentType;
   /** Estado compartido del módulo (opcional): envuelve toda la app */
   Proveedor?: ComponentType<{ children: ReactNode }>;
 }

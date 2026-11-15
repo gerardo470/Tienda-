@@ -74,4 +74,6 @@ export interface RepoCaja {
   sesion(id: string): Promise<SesionCompleta | null>;
   subirRecibo(foto: Blob): Promise<string>;
   urlRecibo(ruta: string): Promise<string>;
+  /** Borra el archivo de la foto para liberar espacio (el movimiento se conserva) */
+  borrarRecibo(ruta: string): Promise<void>;
 }

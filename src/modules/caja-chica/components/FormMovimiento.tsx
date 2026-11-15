@@ -115,6 +115,9 @@ export function FormMovimiento({ abierta, clase, movimiento, saldo, alGuardar, a
         receipt_url: esGasto ? recibo : null,
         servicio_id: esGasto && tipo === 'cliente' ? servicioId || null : null,
       });
+      // Si se quitó o cambió la foto, se borra el archivo viejo para liberar espacio.
+      const anterior = movimiento?.receipt_url;
+      if (anterior && anterior !== (esGasto ? recibo : null)) void repoCaja.borrarRecibo(anterior).catch(() => undefined);
       alCerrar();
     } catch (err) {
       setError(err instanceof Error && err.message.includes('cerrada') ? err.message : 'No se pudo guardar. Revise el internet e intente de nuevo.');
@@ -261,7 +264,7 @@ export function FormMovimiento({ abierta, clase, movimiento, saldo, alGuardar, a
                     <IconoCamara />
                   </span>
                 )}
-                <span className="flex-1 text-sm font-bold">{vistaFoto ? 'Foto lista para guardar' : 'Este gasto ya tiene foto'}</span>
+                <span className="flex-1 text-sm font-bold">{vistaFoto ? 'Foto lista para guardar' : 'Este gasto ya tiene foto. Toque la X para quitarla.'}</span>
                 <button
                   type="button"
                   aria-label="Quitar foto"

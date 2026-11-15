@@ -150,5 +150,9 @@ export function crearRepoSupabase(db: SupabaseClient): RepoCaja {
       if (error || !data) throw new Error(error?.message ?? 'No se pudo abrir la foto');
       return data.signedUrl;
     },
+
+    async borrarRecibo(ruta) {
+      await db.storage.from(BUCKET).remove([ruta]);
+    },
   };
 }

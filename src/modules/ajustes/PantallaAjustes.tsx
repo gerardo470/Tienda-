@@ -9,8 +9,9 @@ import { Boton } from '../../shared/ui/Boton';
 import { Cabecera } from '../../shared/ui/Cabecera';
 import { Confirmar } from '../../shared/ui/Confirmar';
 import { NOMBRE_ROL } from '../../shared/auth/perfiles';
-import { IconoAdelante, IconoChispa, IconoClientes, IconoGlobo, IconoLlave, IconoLuna, IconoPersona, IconoSalir } from '../../shared/ui/iconos';
+import { IconoAdelante, IconoChispa, IconoDocumento, IconoClientes, IconoGlobo, IconoLlave, IconoLuna, IconoPersona, IconoSalir } from '../../shared/ui/iconos';
 import { Interruptor } from '../../shared/ui/Interruptor';
+import { DIAS_PARA_AVISAR, diasSinRespaldo } from './respaldo';
 
 /** Ajustes: nombre, mensajes y animaciones de la mascota, modo oscuro y cerrar sesión. */
 export function PantallaAjustes() {
@@ -64,6 +65,7 @@ export function PantallaAjustes() {
         {esAdmin && (
           <section className="tarjeta divide-y-2 divide-borde overflow-hidden">
             {[
+              { a: '/ajustes/respaldo', Icono: IconoDocumento, titulo: 'Respaldo y espacio', texto: diasSinRespaldo() > DIAS_PARA_AVISAR ? 'Ya toca sacar un respaldo' : 'Descargar, restaurar y ver el espacio usado' },
               { a: '/ajustes/usuarios', Icono: IconoClientes, titulo: 'Usuarios y roles', texto: 'Quién entra y qué puede hacer' },
               { a: '/ajustes/tipos', Icono: IconoLlave, titulo: 'Tipos de servicio', texto: 'Catálogo de trabajos del taller' },
             ].map(({ a, Icono, titulo, texto }) => (
@@ -95,7 +97,7 @@ export function PantallaAjustes() {
           </section>
         )}
 
-        <p className="text-center text-xs font-semibold text-suave">Llavecita · versión 1.1 · Caja Chica y Clientes</p>
+        <p className="text-center text-xs font-semibold text-suave">Llavecita · versión 1.2 · Caja Chica y Clientes</p>
       </div>
 
       <Confirmar

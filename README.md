@@ -29,6 +29,7 @@ Cada cambio a la base de datos es un archivo numerado en `supabase/migrations/`.
 | `20261113000000_caja_chica.sql` | Caja chica: sesiones, movimientos, bitácora y fotos de recibos |
 | `20261115000100_perfiles_roles.sql` | Usuarios y roles (admin, cajero, mecánico) |
 | `20261115000200_clientes.sql` | Clientes, vehículos, servicios y catálogo de tipos |
+| `20261116000100_respaldo_y_espacio.sql` | Restaurar respaldos, espacio usado y borrado de fotos |
 
 Con la CLI de Supabase:
 
@@ -42,6 +43,14 @@ Sin la CLI: pegue el archivo nuevo en Supabase → SQL Editor → Run. Todas las
 
 - **Deshacer:** cada migración tiene su reversa en `supabase/rollback/`. La de clientes **borra datos**: úsela solo a propósito y con respaldo.
 - **Datos de ejemplo:** `supabase/seed.sql` es solo para una base local de pruebas (`npx supabase db reset`). Nunca se aplica en producción.
+
+### Planes gratuitos, respaldos y crecimiento
+
+Llavecita corre en los planes gratuitos de Supabase y Vercel. Los límites, qué pasa al alcanzarlos, cómo funcionan los respaldos y el "latido", y cómo pasar a Supabase Pro están en [`docs/limites.md`](docs/limites.md).
+
+- **Respaldo manual:** Ajustes → Respaldo y espacio.
+- **Respaldo automático semanal (opcional):** `.github/workflows/respaldo.yml`.
+- **Latido diario:** `api/latido.js`, programado en `vercel.json`.
 
 ### Instalarla en un Android
 
@@ -73,7 +82,7 @@ Estas reglas las hace cumplir la base de datos (Row Level Security), no solo la 
 - **Historial:** cajas cerradas con filtro por fechas. Dentro de cada una puede **compartir por WhatsApp** o bajar el **PDF** o el **Excel** (archivo CSV).
 - **Reportes:** totales del período y cuánto se fue en clientes y cuánto en el taller.
 - **Clientes:** lista con buscador (nombre, teléfono o placa), ficha con botones de Llamar y WhatsApp, vehículos, historial de servicios por vehículo como línea de tiempo, registro rápido de servicio y PDF para compartir.
-- **Ajustes:** su nombre, mensajes y animaciones de Llavecita, modo oscuro, usuarios y roles, tipos de servicio y cerrar sesión.
+- **Ajustes:** su nombre, mensajes y animaciones de Llavecita, modo oscuro, respaldo y espacio, usuarios y roles, tipos de servicio y cerrar sesión.
 
 Sin internet la app abre y muestra lo último guardado, pero para registrar hace falta conexión.
 
