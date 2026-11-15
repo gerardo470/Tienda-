@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { dinero, fechaCorta, fechaHora } from '../../../lib/format';
+import { useAuth } from '../../../shared/auth/AuthProvider';
+import { useMascota } from '../../../shared/mascot/MascotaProvider';
+import { useAjustes } from '../../../shared/settings/AjustesProvider';
+import { Boton } from '../../../shared/ui/Boton';
 import { Cabecera } from '../../../shared/ui/Cabecera';
-import { IconoAtras } from '../../../shared/ui/iconos';
+import { ConfirmarPalabra } from '../../../shared/ui/ConfirmarPalabra';
+import { IconoAtras, IconoBasura } from '../../../shared/ui/iconos';
 import { Vacio } from '../../../shared/ui/Vacio';
 import { calcularTotales, textoDiferencia } from '../calculos';
 import { BarraReparto } from '../components/BarraReparto';
@@ -26,6 +31,41 @@ export function PantallaDetalleSesion() {
   const { id } = useParams();
   const [sesion, setSesion] = useState<SesionCompleta | null | undefined>(undefined);
   const [detalle, setDetalle] = useState<Movimiento | null>(null);
+  const navegar = useNavigate();
+  const { esAdmin } = useAuth();
+  const { decir } = useMascota();
+  const { nombre } = useAjustes();
+  const [borrar, setBorrar] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function eliminarCaja() {
+    if (!sesion) return;
+    setOcupado(true);
+    setError(null);
+    try {
+      await repoCaja.eliminarSesion(sesion.id, nombre);
+      decir('Caja eliminada, jefe. Está en “Cajas eliminadas”.', 'guino');
+      navegar('/historial');
+    } catch {
+      setError('No se pudo eliminar. Revise el internet e intente de nuevo.');
+      setOcupado(false);
+    }
+  }
+
+  async function restaurarCaja() {
+    if (!sesion) return;
+    setOcupado(true);
+    setError(null);
+    try {
+      await repoCaja.restaurarSesion(sesion.id);
+      decir('¡Caja restaurada, jefe!', 'contenta');
+      navegar('/historial');
+    } catch (e) {
+      setError(e instanceof Error && e.message.includes('abierta') ? e.message : 'No se pudo restaurar. Revise el internet e intente de nuevo.');
+      setOcupado(false);
+    }
+  }
 
   useEffect(() => {
     let vigente = true;
@@ -40,7 +80,7 @@ export function PantallaDetalleSesion() {
   }, [id]);
 
   const volver = (
-    <Link to="/historial" aria-label="Volver al historial" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-naranja text-petroleo-tinta shadow-[0_4px_0_#C2560A]">
+    <Link to={sesion?.deleted_at ? '/historial/eliminadas' : '/historial'} aria-label="Volver al historial" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-naranja text-petroleo-tinta shadow-[0_4px_0_#C2560A]">
       <IconoAtras />
     </Link>
   );
@@ -70,9 +110,24 @@ export function PantallaDetalleSesion() {
 
   return (
     <>
-      <Cabecera titulo={fechaCorta(sesion.opened_at)} subtitulo={`Cerrada: ${sesion.closed_at ? fechaHora(sesion.closed_at) : '—'}`} animo={d === 0 ? 'contenta' : 'pensativa'} accion={volver} />
+      <Cabecera titulo={fechaCorta(sesion.opened_at)} subtitulo={sesion.status === 'open' ? 'Caja abierta' : `Cerrada: ${sesion.closed_at ? fechaHora(sesion.closed_at) : '—'}`} animo={d === 0 ? 'contenta' : 'pensativa'} accion={volver} />
 
       <div className="flex flex-col gap-4 px-4 pb-6 pt-4">
+        {sesion.deleted_at && (
+          <section className="flex flex-col gap-3 rounded-3xl bg-coral-bg p-4 text-coral-fg">
+            <p className="text-sm font-extrabold">
+              Esta caja fue eliminada el {fechaHora(sesion.deleted_at)}
+              {sesion.deleted_by ? ` por ${sesion.deleted_by}` : ''}. No cuenta en saldos ni reportes.
+            </p>
+            {esAdmin && (
+              <Boton variante="neutro" ancho disabled={ocupado} onClick={restaurarCaja}>
+                {ocupado ? 'Restaurando…' : 'Restaurar esta caja'}
+              </Boton>
+            )}
+            {error && <p role="alert" className="text-sm font-bold">{error}</p>}
+          </section>
+        )}
+
         <section className="tarjeta px-4 py-1">
           <div className="divide-y-2 divide-borde">
             <Renglon texto="Monto inicial" valor={dinero(t.inicial)} />
@@ -96,7 +151,7 @@ export function PantallaDetalleSesion() {
           <BarraReparto cliente={t.gastosCliente} taller={t.gastosTaller} />
         </section>
 
-        <BotonesExportar sesion={sesion} />
+        {!sesion.deleted_at && <BotonesExportar sesion={sesion} />}
 
         <section className="flex flex-col gap-2">
           <h2 className="font-display text-[19px] font-bold leading-6">Gastos ({gastos.length})</h2>
@@ -115,7 +170,26 @@ export function PantallaDetalleSesion() {
             abonos.map((m) => <ItemMovimiento key={m.id} mov={m} alVer={setDetalle} />)
           )}
         </section>
+
+        {esAdmin && !sesion.deleted_at && (
+          <Boton variante="neutro" ancho onClick={() => setBorrar(true)}>
+            <IconoBasura size={20} />
+            Eliminar caja
+          </Boton>
+        )}
       </div>
+
+      <ConfirmarPalabra
+        abierta={borrar}
+        titulo="¿Eliminar esta caja?"
+        mensaje={`La caja del ${fechaCorta(sesion.opened_at)} y sus ${sesion.movimientos.length} movimientos dejan de contar y se ocultan. Queda en “Cajas eliminadas” por si quiere restaurarla, y se anota en la bitácora.`}
+        palabra="BORRAR"
+        textoSi="Eliminar caja"
+        ocupado={ocupado}
+        error={error}
+        alCancelar={() => setBorrar(false)}
+        alConfirmar={eliminarCaja}
+      />
 
       <HojaDetalle mov={detalle} alCerrar={() => setDetalle(null)} />
     </>

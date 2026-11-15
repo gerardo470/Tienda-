@@ -1,9 +1,13 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { dinero, fechaLarga, hora, hoyISO, inicioMesISO } from '../../../lib/format';
+import { dinero, fechaCorta, fechaLarga, hora, hoyISO, inicioMesISO } from '../../../lib/format';
+import { useAuth } from '../../../shared/auth/AuthProvider';
+import { useMascota } from '../../../shared/mascot/MascotaProvider';
+import { useAjustes } from '../../../shared/settings/AjustesProvider';
 import { Cabecera } from '../../../shared/ui/Cabecera';
-import { IconoAdelante } from '../../../shared/ui/iconos';
+import { ConfirmarPalabra } from '../../../shared/ui/ConfirmarPalabra';
+import { IconoAdelante, IconoBasura } from '../../../shared/ui/iconos';
 import { Vacio } from '../../../shared/ui/Vacio';
 import { calcularTotales, textoDiferencia } from '../calculos';
 import { FiltroFechas } from '../../../shared/ui/FiltroFechas';
@@ -18,6 +22,38 @@ export function PantallaHistorial() {
   const [rango, setRango] = useState(() => rangoGuardado ?? { desde: inicioMesISO(), hasta: hoyISO() });
   const [sesiones, setSesiones] = useState<SesionCompleta[] | null>(null);
   const [fallo, setFallo] = useState(false);
+  const { esAdmin } = useAuth();
+  const { decir } = useMascota();
+  const { nombre } = useAjustes();
+  const [porBorrar, setPorBorrar] = useState<SesionCompleta | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [errorBorrar, setErrorBorrar] = useState<string | null>(null);
+  const [numEliminadas, setNumEliminadas] = useState(0);
+
+  // Cuántas cajas eliminadas hay (solo le interesa al admin).
+  useEffect(() => {
+    if (!esAdmin) return;
+    repoCaja
+      .sesionesEliminadas()
+      .then((l) => setNumEliminadas(l.length))
+      .catch(() => undefined);
+  }, [esAdmin, sesiones]);
+
+  async function eliminarCaja() {
+    if (!porBorrar) return;
+    setOcupado(true);
+    setErrorBorrar(null);
+    try {
+      await repoCaja.eliminarSesion(porBorrar.id, nombre);
+      setSesiones((l) => l?.filter((x) => x.id !== porBorrar.id) ?? null);
+      setPorBorrar(null);
+      decir('Caja eliminada, jefe. Está en “Cajas eliminadas”.', 'guino');
+    } catch {
+      setErrorBorrar('No se pudo eliminar. Revise el internet e intente de nuevo.');
+    } finally {
+      setOcupado(false);
+    }
+  }
 
   useEffect(() => {
     rangoGuardado = rango;
@@ -59,9 +95,9 @@ export function PantallaHistorial() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i, 8) * 0.04, type: 'spring', stiffness: 380, damping: 28 }}
-                whileTap={{ scale: 0.97 }}
+                className="tarjeta flex items-center"
               >
-                <Link to={`/historial/${s.id}`} className="tarjeta flex items-center gap-3 px-4 py-3.5">
+                <Link to={`/historial/${s.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-4 pr-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-extrabold first-letter:uppercase">{fechaLarga(s.opened_at)}</p>
                     <p className="text-xs font-semibold text-suave">
@@ -75,13 +111,36 @@ export function PantallaHistorial() {
                       </span>
                     </div>
                   </div>
-                  <IconoAdelante className="shrink-0 text-suave" />
+                  {!esAdmin && <IconoAdelante className="shrink-0 text-suave" />}
                 </Link>
+                {esAdmin && (
+                  <button type="button" aria-label="Eliminar caja" onClick={() => (setErrorBorrar(null), setPorBorrar(s))} className="flex h-14 w-14 shrink-0 items-center justify-center text-coral-fg">
+                    <IconoBasura />
+                  </button>
+                )}
               </motion.div>
             );
           })
         )}
+        {esAdmin && (
+          <Link to="/historial/eliminadas" className="flex min-h-[48px] items-center justify-center gap-2 rounded-[20px] border-2 border-borde text-sm font-extrabold text-suave">
+            <IconoBasura size={18} />
+            Cajas eliminadas ({numEliminadas})
+          </Link>
+        )}
       </div>
+
+      <ConfirmarPalabra
+        abierta={!!porBorrar}
+        titulo="¿Eliminar esta caja?"
+        mensaje={porBorrar ? `La caja del ${fechaCorta(porBorrar.opened_at)} y sus ${porBorrar.movimientos.length} movimientos dejan de contar y se ocultan. Queda en “Cajas eliminadas” por si quiere restaurarla, y se anota en la bitácora.` : null}
+        palabra="BORRAR"
+        textoSi="Eliminar caja"
+        ocupado={ocupado}
+        error={errorBorrar}
+        alCancelar={() => setPorBorrar(null)}
+        alConfirmar={eliminarCaja}
+      />
     </>
   );
 }

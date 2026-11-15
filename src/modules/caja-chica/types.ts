@@ -13,6 +13,9 @@ export interface Sesion {
   status: EstadoSesion;
   opened_by: string | null;
   closed_by: string | null;
+  /** Si tiene fecha, la caja fue eliminada por el administrador (se puede restaurar) */
+  deleted_at: string | null;
+  deleted_by: string | null;
 }
 
 export interface Movimiento {
@@ -72,6 +75,12 @@ export interface RepoCaja {
   cerrarSesion(sesionId: string, contado: number, quien: string): Promise<Sesion>;
   sesionesCerradas(rango: Rango): Promise<SesionCompleta[]>;
   sesion(id: string): Promise<SesionCompleta | null>;
+  /** Elimina una caja completa (borrado lógico, solo admin) */
+  eliminarSesion(id: string, quien: string): Promise<void>;
+  /** Devuelve una caja eliminada a su lugar (solo admin) */
+  restaurarSesion(id: string): Promise<void>;
+  /** Cajas eliminadas, para poder restaurarlas */
+  sesionesEliminadas(): Promise<SesionCompleta[]>;
   subirRecibo(foto: Blob): Promise<string>;
   urlRecibo(ruta: string): Promise<string>;
   /** Borra el archivo de la foto para liberar espacio (el movimiento se conserva) */

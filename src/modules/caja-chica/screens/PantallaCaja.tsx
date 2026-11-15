@@ -5,11 +5,13 @@ import { dinero, fechaLarga, leerMonto } from '../../../lib/format';
 import { vibrar } from '../../../lib/haptics';
 import { frases } from '../../../shared/mascot/frases';
 import type { Animo } from '../../../shared/mascot/Llavecita';
+import { useAuth } from '../../../shared/auth/AuthProvider';
 import { useMascota } from '../../../shared/mascot/MascotaProvider';
 import { useAjustes } from '../../../shared/settings/AjustesProvider';
 import { Boton } from '../../../shared/ui/Boton';
 import { Cabecera } from '../../../shared/ui/Cabecera';
 import { Confirmar } from '../../../shared/ui/Confirmar';
+import { ConfirmarPalabra } from '../../../shared/ui/ConfirmarPalabra';
 import { IconoCandado, IconoMas, IconoMenos, IconoSinSenal } from '../../../shared/ui/iconos';
 import { NumeroAnimado } from '../../../shared/ui/NumeroAnimado';
 import { Vacio } from '../../../shared/ui/Vacio';
@@ -36,7 +38,10 @@ function AvisoSinConexion() {
 
 /** Pantalla principal: la caja chica del día. */
 export function PantallaCaja() {
-  const { cargando, sinConexion, sesion, totales, abrir, agregar, editar, eliminar, cerrar } = useCaja();
+  const { cargando, sinConexion, sesion, totales, abrir, agregar, editar, eliminar, cerrar, eliminarAbierta } = useCaja();
+  const { esAdmin } = useAuth();
+  const [borrarCaja, setBorrarCaja] = useState(false);
+  const [borrandoCaja, setBorrandoCaja] = useState(false);
   const { decir, celebrar } = useMascota();
   const { animaciones } = useAjustes();
   const navegar = useNavigate();
@@ -311,7 +316,36 @@ export function PantallaCaja() {
             <p className="pt-1 text-center text-xs font-semibold text-suave">Deslice a la izquierda para eliminar · Mantenga presionado para editar</p>
           </>
         )}
+        {esAdmin && !sinConexion && (
+          <button type="button" onClick={() => setBorrarCaja(true)} className="mt-2 min-h-[44px] self-center text-sm font-extrabold text-coral-fg">
+            Eliminar esta caja
+          </button>
+        )}
       </section>
+
+      <ConfirmarPalabra
+        abierta={borrarCaja}
+        titulo="¿Eliminar esta caja?"
+        mensaje="La caja abierta y todos sus gastos y abonos dejan de contar y se ocultan. Queda en “Cajas eliminadas” por si quiere restaurarla, y se anota en la bitácora."
+        palabra="BORRAR"
+        textoSi="Eliminar caja"
+        ocupado={borrandoCaja}
+        alCancelar={() => setBorrarCaja(false)}
+        alConfirmar={async () => {
+          setBorrandoCaja(true);
+          try {
+            await eliminarAbierta();
+            setBorrarCaja(false);
+            hapt('exito');
+            decir('Caja eliminada, jefe. Puede abrir otra.', 'guino');
+          } catch {
+            hapt('alerta');
+            decir(frases.error(), 'preocupada');
+          } finally {
+            setBorrandoCaja(false);
+          }
+        }}
+      />
 
       <FormMovimiento
         abierta={!!form}

@@ -54,20 +54,20 @@ function anotar(a: Almacen, action: string, entity: string, entity_id: string, a
 
 function exigirAbierta(a: Almacen, sesionId: string) {
   const s = a.sesiones.find((x) => x.id === sesionId);
-  if (!s || s.status !== 'open') throw new Error('La caja está cerrada: no se pueden cambiar sus movimientos');
+  if (!s || s.status !== 'open' || s.deleted_at) throw new Error('La caja está cerrada: no se pueden cambiar sus movimientos');
 }
 
 export function crearRepoLocal(): RepoCaja {
   return {
     async sesionAbierta() {
       const a = leer();
-      const s = a.sesiones.find((x) => x.status === 'open');
+      const s = a.sesiones.find((x) => x.status === 'open' && !x.deleted_at);
       return s ? completa(a, s) : null;
     },
 
     async abrirSesion(montoInicial, quien) {
       const a = leer();
-      if (a.sesiones.some((x) => x.status === 'open')) throw new Error('Ya hay una caja abierta');
+      if (a.sesiones.some((x) => x.status === 'open' && !x.deleted_at)) throw new Error('Ya hay una caja abierta');
       const s: Sesion = {
         id: id(),
         opened_at: ahora(),
@@ -77,6 +77,8 @@ export function crearRepoLocal(): RepoCaja {
         status: 'open',
         opened_by: quien || null,
         closed_by: null,
+        deleted_at: null,
+        deleted_by: null,
       };
       a.sesiones.push(s);
       anotar(a, 'abrir', 'caja', s.id, s.opened_by);
@@ -136,7 +138,7 @@ export function crearRepoLocal(): RepoCaja {
       return a.sesiones
         .filter((s) => {
           const t = new Date(s.opened_at).getTime();
-          return s.status === 'closed' && t >= desde && t <= hasta;
+          return s.status === 'closed' && !s.deleted_at && t >= desde && t <= hasta;
         })
         .sort((x, y) => y.opened_at.localeCompare(x.opened_at))
         .map((s) => completa(a, s));
@@ -146,6 +148,35 @@ export function crearRepoLocal(): RepoCaja {
       const a = leer();
       const s = a.sesiones.find((x) => x.id === idSesion);
       return s ? completa(a, s) : null;
+    },
+
+    async eliminarSesion(idSesion, quien) {
+      const a = leer();
+      const s = a.sesiones.find((x) => x.id === idSesion && !x.deleted_at);
+      if (!s) throw new Error('No se encontró la caja o ya estaba eliminada');
+      s.deleted_at = ahora();
+      s.deleted_by = quien || null;
+      anotar(a, 'eliminar', 'caja', s.id, quien || null);
+      guardar(a);
+    },
+
+    async restaurarSesion(idSesion) {
+      const a = leer();
+      const s = a.sesiones.find((x) => x.id === idSesion && x.deleted_at);
+      if (!s) throw new Error('No se encontró la caja o no estaba eliminada');
+      if (s.status === 'open' && a.sesiones.some((x) => x.id !== s.id && x.status === 'open' && !x.deleted_at)) throw new Error('Ya hay otra caja abierta: ciérrela antes de restaurar esta');
+      s.deleted_at = null;
+      s.deleted_by = null;
+      anotar(a, 'restaurar', 'caja', s.id, null);
+      guardar(a);
+    },
+
+    async sesionesEliminadas() {
+      const a = leer();
+      return a.sesiones
+        .filter((s) => s.deleted_at)
+        .sort((x, y) => (y.deleted_at ?? '').localeCompare(x.deleted_at ?? ''))
+        .map((s) => completa(a, s));
     },
 
     // En modo demostración la foto se guarda dentro del propio teléfono.

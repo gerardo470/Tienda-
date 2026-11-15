@@ -30,6 +30,7 @@ Cada cambio a la base de datos es un archivo numerado en `supabase/migrations/`.
 | `20261115000100_perfiles_roles.sql` | Usuarios y roles (admin, cajero, mecánico) |
 | `20261115000200_clientes.sql` | Clientes, vehículos, servicios y catálogo de tipos |
 | `20261116000100_respaldo_y_espacio.sql` | Restaurar respaldos, espacio usado y borrado de fotos |
+| `20261117000100_borrar_cajas.sql` | Eliminar y restaurar cajas completas (solo admin) |
 
 Con la CLI de Supabase:
 
@@ -79,6 +80,7 @@ Estas reglas las hace cumplir la base de datos (Row Level Security), no solo la 
 - **Registrar gasto / abono:** los dos botones grandes. En el gasto elija **Cliente** (con el vehículo) o **Taller**, y si quiere tome foto del recibo.
 - **En la lista:** toque para ver el detalle, **mantenga presionado** para editar, **deslice a la izquierda** para eliminar (pide confirmación).
 - **Cerrar caja:** muestra el resumen, usted escribe el efectivo contado y le dice si sobra o falta. Una caja cerrada ya no se puede cambiar.
+- **Eliminar una caja (solo admin):** en el Historial (ícono de basurero), dentro del detalle de la caja o al final de la caja abierta. Pide escribir BORRAR. La caja no se destruye: queda en Historial → Cajas eliminadas, desde donde se puede restaurar.
 - **Historial:** cajas cerradas con filtro por fechas. Dentro de cada una puede **compartir por WhatsApp** o bajar el **PDF** o el **Excel** (archivo CSV).
 - **Reportes:** totales del período y cuánto se fue en clientes y cuánto en el taller.
 - **Clientes:** lista con buscador (nombre, teléfono o placa), ficha con botones de Llamar y WhatsApp, vehículos, historial de servicios por vehículo como línea de tiempo, registro rápido de servicio y PDF para compartir.
