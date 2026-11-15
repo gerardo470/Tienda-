@@ -16,6 +16,8 @@ interface Ctx {
   editar: (id: string, datos: DatosMovimiento) => Promise<Movimiento>;
   eliminar: (id: string) => Promise<void>;
   cerrar: (contado: number) => Promise<Sesion>;
+  /** Elimina la caja abierta completa (solo admin); después se puede abrir otra */
+  eliminarAbierta: () => Promise<void>;
 }
 
 const CajaCtx = createContext<Ctx | null>(null);
@@ -123,11 +125,17 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     [exigir, fijar, nombre],
   );
 
+  const eliminarAbierta = useCallback(async () => {
+    const s = exigir();
+    await repoCaja.eliminarSesion(s.id, nombre);
+    fijar(null);
+  }, [exigir, fijar, nombre]);
+
   const totales = useMemo(() => (sesion ? calcularTotales(sesion) : null), [sesion]);
 
   const valor = useMemo<Ctx>(
-    () => ({ cargando, sinConexion, sesion, totales, recargar, abrir, agregar, editar, eliminar, cerrar }),
-    [cargando, sinConexion, sesion, totales, recargar, abrir, agregar, editar, eliminar, cerrar],
+    () => ({ cargando, sinConexion, sesion, totales, recargar, abrir, agregar, editar, eliminar, cerrar, eliminarAbierta }),
+    [cargando, sinConexion, sesion, totales, recargar, abrir, agregar, editar, eliminar, cerrar, eliminarAbierta],
   );
 
   return <CajaCtx.Provider value={valor}>{children}</CajaCtx.Provider>;

@@ -15,6 +15,8 @@ function aSesion(f: any): Sesion {
     status: f.status,
     opened_by: f.opened_by ?? null,
     closed_by: f.closed_by ?? null,
+    deleted_at: f.deleted_at ?? null,
+    deleted_by: f.deleted_by ?? null,
   };
 }
 
@@ -54,7 +56,7 @@ export function crearRepoSupabase(db: SupabaseClient): RepoCaja {
 
   return {
     async sesionAbierta() {
-      const fila = revisar(await db.from('cash_sessions').select(SELECT).eq('status', 'open').maybeSingle());
+      const fila = revisar(await db.from('cash_sessions').select(SELECT).eq('status', 'open').is('deleted_at', null).maybeSingle());
       return fila ? aCompleta(fila) : null;
     },
 
@@ -122,7 +124,7 @@ export function crearRepoSupabase(db: SupabaseClient): RepoCaja {
     },
 
     async sesionesCerradas(rango: Rango) {
-      let consulta = db.from('cash_sessions').select(SELECT).eq('status', 'closed');
+      let consulta = db.from('cash_sessions').select(SELECT).eq('status', 'closed').is('deleted_at', null);
       if (rango.desde) consulta = consulta.gte('opened_at', inicioDelDia(rango.desde));
       if (rango.hasta) consulta = consulta.lte('opened_at', finDelDia(rango.hasta));
       const filas = revisar(await consulta.order('opened_at', { ascending: false }).limit(500));
@@ -132,6 +134,19 @@ export function crearRepoSupabase(db: SupabaseClient): RepoCaja {
     async sesion(id) {
       const fila = revisar(await db.from('cash_sessions').select(SELECT).eq('id', id).maybeSingle());
       return fila ? aCompleta(fila) : null;
+    },
+
+    async eliminarSesion(id) {
+      revisar(await db.rpc('eliminar_caja', { caja: id }));
+    },
+
+    async restaurarSesion(id) {
+      revisar(await db.rpc('restaurar_caja', { caja: id }));
+    },
+
+    async sesionesEliminadas() {
+      const filas = revisar(await db.from('cash_sessions').select(SELECT).not('deleted_at', 'is', null).order('deleted_at', { ascending: false }).limit(200));
+      return (filas as any[]).map(aCompleta);
     },
 
     async subirRecibo(foto) {

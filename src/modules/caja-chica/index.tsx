@@ -3,6 +3,7 @@ import type { Rol } from '../../shared/auth/perfiles';
 import type { ModuloApp } from '../tipos';
 import { CajaProvider } from './CajaProvider';
 import { PantallaCaja } from './screens/PantallaCaja';
+import { PantallaCajasEliminadas } from './screens/PantallaCajasEliminadas';
 import { PantallaDetalleSesion } from './screens/PantallaDetalleSesion';
 import { PantallaHistorial } from './screens/PantallaHistorial';
 import { PantallaReportes } from './screens/PantallaReportes';
@@ -17,6 +18,7 @@ export const moduloCajaChica: ModuloApp = {
   rutas: [
     { ruta: '/', roles, pantalla: <PantallaCaja /> },
     { ruta: '/historial', roles, pantalla: <PantallaHistorial /> },
+    { ruta: '/historial/eliminadas', roles: ['admin'], pantalla: <PantallaCajasEliminadas /> },
     { ruta: '/historial/:id', roles, pantalla: <PantallaDetalleSesion /> },
     { ruta: '/reportes', roles, pantalla: <PantallaReportes /> },
   ],
