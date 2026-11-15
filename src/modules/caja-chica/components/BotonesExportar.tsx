@@ -3,7 +3,8 @@ import { frases } from '../../../shared/mascot/frases';
 import { useMascota } from '../../../shared/mascot/MascotaProvider';
 import { Boton } from '../../../shared/ui/Boton';
 import { IconoCompartir, IconoDocumento, IconoTabla } from '../../../shared/ui/iconos';
-import { compartir, crearCSV, crearPDF, descargar, resumenTexto } from '../exportar';
+import { compartir, descargar } from '../../../lib/compartir';
+import { crearCSV, crearPDF, resumenTexto } from '../exportar';
 import type { SesionCompleta } from '../types';
 
 /** Botones para sacar el detalle de una sesión en PDF, Excel o por WhatsApp. */
@@ -20,7 +21,7 @@ export function BotonesExportar({ sesion }: { sesion: SesionCompleta }) {
       } else if (cual === 'pdf') {
         descargar(await crearPDF(sesion));
         decir(frases.exportado(), 'guino');
-      } else if (await compartir(await crearPDF(sesion), resumenTexto(sesion))) {
+      } else if (await compartir(await crearPDF(sesion), resumenTexto(sesion), 'Caja Chica')) {
         decir(frases.exportado(), 'guino');
       }
     } catch {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { modoDemo } from '../../lib/supabase';
 import { useAuth } from '../../shared/auth/AuthProvider';
 import { frases } from '../../shared/mascot/frases';
@@ -7,13 +8,14 @@ import { useAjustes } from '../../shared/settings/AjustesProvider';
 import { Boton } from '../../shared/ui/Boton';
 import { Cabecera } from '../../shared/ui/Cabecera';
 import { Confirmar } from '../../shared/ui/Confirmar';
-import { IconoChispa, IconoGlobo, IconoLuna, IconoPersona, IconoSalir } from '../../shared/ui/iconos';
+import { NOMBRE_ROL } from '../../shared/auth/perfiles';
+import { IconoAdelante, IconoChispa, IconoClientes, IconoGlobo, IconoLlave, IconoLuna, IconoPersona, IconoSalir } from '../../shared/ui/iconos';
 import { Interruptor } from '../../shared/ui/Interruptor';
 
 /** Ajustes: nombre, mensajes y animaciones de la mascota, modo oscuro y cerrar sesión. */
 export function PantallaAjustes() {
   const { nombre, mensajes, animaciones, oscuro, cambiar } = useAjustes();
-  const { correo, salir } = useAuth();
+  const { correo, salir, esAdmin, rol } = useAuth();
   const { decir } = useMascota();
   const [confirmar, setConfirmar] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
@@ -59,11 +61,32 @@ export function PantallaAjustes() {
           <Interruptor icono={<IconoLuna />} titulo="Modo oscuro" descripcion="Para trabajar de noche" activo={oscuro} alCambiar={(v) => cambiar({ oscuro: v })} />
         </section>
 
+        {esAdmin && (
+          <section className="tarjeta divide-y-2 divide-borde overflow-hidden">
+            {[
+              { a: '/ajustes/usuarios', Icono: IconoClientes, titulo: 'Usuarios y roles', texto: 'Quién entra y qué puede hacer' },
+              { a: '/ajustes/tipos', Icono: IconoLlave, titulo: 'Tipos de servicio', texto: 'Catálogo de trabajos del taller' },
+            ].map(({ a, Icono, titulo, texto }) => (
+              <Link key={a} to={a} className="flex min-h-[64px] items-center gap-3 px-4 py-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-naranja-bg text-naranja-fg">
+                  <Icono />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-extrabold">{titulo}</span>
+                  <span className="block text-xs font-semibold text-suave">{texto}</span>
+                </span>
+                <IconoAdelante className="shrink-0 text-suave" />
+              </Link>
+            ))}
+          </section>
+        )}
+
         {!modoDemo && (
           <section className="tarjeta flex flex-col gap-3 p-4">
             <div>
               <p className="etiqueta">Sesión iniciada</p>
               <p className="truncate text-[15px] font-extrabold">{correo ?? '—'}</p>
+              {rol && <p className="text-xs font-semibold text-suave">Rol: {NOMBRE_ROL[rol]}</p>}
             </div>
             <Boton variante="neutro" ancho onClick={() => setConfirmar(true)}>
               <IconoSalir size={20} />
@@ -72,7 +95,7 @@ export function PantallaAjustes() {
           </section>
         )}
 
-        <p className="text-center text-xs font-semibold text-suave">Llavecita · versión 1.0 · módulo Caja Chica</p>
+        <p className="text-center text-xs font-semibold text-suave">Llavecita · versión 1.1 · Caja Chica y Clientes</p>
       </div>
 
       <Confirmar

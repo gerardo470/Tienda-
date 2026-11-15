@@ -2,19 +2,23 @@ import { motion } from 'framer-motion';
 import { NavLink, useLocation } from 'react-router-dom';
 import { vibrar } from '../../lib/haptics';
 import { modulos } from '../../modules/registro';
+import { useAuth } from '../auth/AuthProvider';
 import { useAjustes } from '../settings/AjustesProvider';
 
-const botones = modulos.flatMap((m) => m.navegacion);
+const todos = modulos.flatMap((m) => m.navegacion).sort((a, b) => a.orden - b.orden);
 
 /** Barra inferior de navegación con iconos animados. */
 export function BarraInferior() {
   const { pathname } = useLocation();
   const { animaciones } = useAjustes();
+  const { rol } = useAuth();
+  // Cada quien ve solo las secciones que su rol permite.
+  const botones = todos.filter((b) => !b.roles || (rol && b.roles.includes(rol)));
 
   return (
     <nav
       aria-label="Navegación principal"
-      className="relative z-20 grid shrink-0 gap-1 rounded-t-[26px] bg-tarjeta px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_0_var(--borde)]"
+      className="relative z-20 grid shrink-0 gap-1 rounded-t-[26px] bg-tarjeta px-1.5 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_0_var(--borde)]"
       style={{ gridTemplateColumns: `repeat(${botones.length}, minmax(0, 1fr))` }}
     >
       {botones.map(({ ruta, etiqueta, Icono }) => {
@@ -25,9 +29,9 @@ export function BarraInferior() {
             to={ruta}
             onClick={() => animaciones && vibrar('toque')}
             aria-current={activo ? 'page' : undefined}
-            className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-xs ${activo ? 'font-extrabold text-tinta' : 'font-bold text-suave'}`}
+            className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-[11px] ${activo ? 'font-extrabold text-tinta' : 'font-bold text-suave'}`}
           >
-            <span className="relative flex h-[30px] w-14 items-center justify-center">
+            <span className="relative flex h-[30px] w-12 items-center justify-center">
               {activo && <motion.span layoutId="nav-activo" className="absolute inset-0 rounded-full bg-naranja" transition={{ type: 'spring', stiffness: 500, damping: 32 }} />}
               <motion.span
                 className={`relative ${activo ? 'text-petroleo-tinta' : ''}`}

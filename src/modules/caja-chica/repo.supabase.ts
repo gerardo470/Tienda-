@@ -29,6 +29,7 @@ function aMovimiento(f: any): Movimiento {
     amount: Number(f.amount),
     registered_by: f.registered_by ?? null,
     receipt_url: f.receipt_url ?? null,
+    servicio_id: f.servicio_id ?? null,
     created_at: f.created_at,
     updated_at: f.updated_at ?? null,
     deleted_at: f.deleted_at ?? null,

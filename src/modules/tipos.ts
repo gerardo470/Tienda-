@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
+import type { Rol } from '../shared/auth/perfiles';
 
 /**
  * Forma que debe tener cada módulo de Llavecita.
@@ -10,9 +11,11 @@ import type { ComponentType, ReactNode } from 'react';
 export interface ModuloApp {
   id: string;
   /** Pantallas del módulo */
-  rutas: { ruta: string; pantalla: ReactNode }[];
+  /** `roles`: quiénes pueden entrar (si falta, todos) */
+  rutas: { ruta: string; pantalla: ReactNode; roles?: Rol[] }[];
   /** Botones que el módulo pone en la barra inferior */
-  navegacion: { ruta: string; etiqueta: string; Icono: ComponentType<{ size?: number }> }[];
+  /** `orden`: posición en la barra (de menor a mayor) */
+  navegacion: { ruta: string; etiqueta: string; Icono: ComponentType<{ size?: number }>; orden: number; roles?: Rol[] }[];
   /** Estado compartido del módulo (opcional): envuelve toda la app */
   Proveedor?: ComponentType<{ children: ReactNode }>;
 }

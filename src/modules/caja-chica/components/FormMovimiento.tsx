@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { dinero, leerMonto } from '../../../lib/format';
 import { comprimirImagen } from '../../../lib/imagen';
+import { dinero as usd, fechaDia } from '../../../lib/format';
+import { useAuth } from '../../../shared/auth/AuthProvider';
 import { useAjustes } from '../../../shared/settings/AjustesProvider';
 import { Boton } from '../../../shared/ui/Boton';
 import { Hoja } from '../../../shared/ui/Hoja';
 import { IconoCamara, IconoCarro, IconoCerrar, IconoLlave } from '../../../shared/ui/iconos';
+import { nombreVehiculo } from '../../clientes/calculos';
+import { useClientes } from '../../clientes/ClientesProvider';
 import { repoCaja } from '../repo';
 import type { Clase, DatosMovimiento, Movimiento, TipoGasto } from '../types';
 
@@ -24,6 +28,19 @@ const CLAVE_TIPO = 'llavecita-ultimo-tipo';
 /** Formulario para registrar o editar un gasto o un abono. */
 export function FormMovimiento({ abierta, clase, movimiento, saldo, alGuardar, alCerrar }: Props) {
   const { nombre, cambiar } = useAjustes();
+  const { perfil } = useAuth();
+  const { clientes } = useClientes();
+  const [servicioId, setServicioId] = useState('');
+
+  // Los 30 servicios más recientes, para poder ligar el gasto a uno de ellos.
+  const serviciosRecientes = useMemo(
+    () =>
+      clientes
+        .flatMap((c) => c.servicios.map((s) => ({ s, c, v: c.vehiculos.find((x) => x.id === s.vehiculo_id) })))
+        .sort((a, b) => b.s.fecha.localeCompare(a.s.fecha))
+        .slice(0, 30),
+    [clientes],
+  );
   const esGasto = clase === 'gasto';
 
   const [monto, setMonto] = useState('');
@@ -45,7 +62,8 @@ export function FormMovimiento({ abierta, clase, movimiento, saldo, alGuardar, a
     setDescripcion(movimiento?.description ?? '');
     setTipo(movimiento?.type ?? ((localStorage.getItem(CLAVE_TIPO) as TipoGasto | null) || 'taller'));
     setVehiculo(movimiento?.vehicle ?? '');
-    setQuien(movimiento?.registered_by ?? nombre);
+    setQuien(movimiento?.registered_by ?? (nombre || perfil?.nombre || ''));
+    setServicioId(movimiento?.servicio_id ?? '');
     setFoto(null);
     setVistaFoto(null);
     setRutaFoto(movimiento?.receipt_url ?? null);
@@ -95,6 +113,7 @@ export function FormMovimiento({ abierta, clase, movimiento, saldo, alGuardar, a
         amount: valor,
         registered_by: persona || null,
         receipt_url: esGasto ? recibo : null,
+        servicio_id: esGasto && tipo === 'cliente' ? servicioId || null : null,
       });
       alCerrar();
     } catch (err) {
@@ -188,6 +207,31 @@ export function FormMovimiento({ abierta, clase, movimiento, saldo, alGuardar, a
               value={vehiculo}
               onChange={(e) => setVehiculo(e.target.value)}
             />
+          </div>
+        )}
+
+        {esGasto && tipo === 'cliente' && serviciosRecientes.length > 0 && (
+          <div>
+            <label className="etiqueta" htmlFor="mov-servicio">
+              Servicio al que corresponde (opcional)
+            </label>
+            <select
+              id="mov-servicio"
+              className="campo h-[52px] px-3 text-[15px]"
+              value={servicioId}
+              onChange={(e) => {
+                setServicioId(e.target.value);
+                const elegido = serviciosRecientes.find((x) => x.s.id === e.target.value);
+                if (elegido?.v && !vehiculo.trim()) setVehiculo([nombreVehiculo(elegido.v), elegido.v.placa].filter(Boolean).join(', '));
+              }}
+            >
+              <option value="">Ninguno</option>
+              {serviciosRecientes.map(({ s, c }) => (
+                <option key={s.id} value={s.id}>
+                  {c.nombre} · {s.tipo} · {fechaDia(s.fecha)} · {usd(s.costo)}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
