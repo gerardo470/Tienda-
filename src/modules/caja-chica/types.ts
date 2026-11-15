@@ -29,6 +29,8 @@ export interface Movimiento {
   registered_by: string | null;
   /** Ruta de la foto del recibo en Storage */
   receipt_url: string | null;
+  /** Servicio de un cliente al que corresponde este gasto (opcional) */
+  servicio_id: string | null;
   created_at: string;
   updated_at: string | null;
   deleted_at: string | null;
@@ -47,6 +49,7 @@ export interface DatosMovimiento {
   amount: number;
   registered_by: string | null;
   receipt_url: string | null;
+  servicio_id: string | null;
 }
 
 export interface Rango {
@@ -71,4 +74,6 @@ export interface RepoCaja {
   sesion(id: string): Promise<SesionCompleta | null>;
   subirRecibo(foto: Blob): Promise<string>;
   urlRecibo(ruta: string): Promise<string>;
+  /** Borra el archivo de la foto para liberar espacio (el movimiento se conserva) */
+  borrarRecibo(ruta: string): Promise<void>;
 }

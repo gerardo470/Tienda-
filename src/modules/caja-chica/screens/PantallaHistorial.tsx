@@ -6,7 +6,7 @@ import { Cabecera } from '../../../shared/ui/Cabecera';
 import { IconoAdelante } from '../../../shared/ui/iconos';
 import { Vacio } from '../../../shared/ui/Vacio';
 import { calcularTotales, textoDiferencia } from '../calculos';
-import { FiltroFechas } from '../components/FiltroFechas';
+import { FiltroFechas } from '../../../shared/ui/FiltroFechas';
 import { repoCaja } from '../repo';
 import type { SesionCompleta } from '../types';
 

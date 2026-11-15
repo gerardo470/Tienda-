@@ -7,7 +7,7 @@ import { Vacio } from '../../../shared/ui/Vacio';
 import { calcularTotales } from '../calculos';
 import { useCaja } from '../CajaProvider';
 import { Dona } from '../components/Dona';
-import { FiltroFechas } from '../components/FiltroFechas';
+import { FiltroFechas } from '../../../shared/ui/FiltroFechas';
 import { repoCaja } from '../repo';
 import type { SesionCompleta } from '../types';
 

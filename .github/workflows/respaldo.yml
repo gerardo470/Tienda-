@@ -1,0 +1,60 @@
+# Respaldo automático semanal de la base de datos (opcional y gratuito).
+# Hace una copia completa con pg_dump, la cifra con una contraseña y la deja
+# guardada 90 días en GitHub (pestaña Actions > la ejecución > Artifacts).
+#
+# NO hace nada hasta que existan estos dos secretos en
+# GitHub > Settings > Secrets and variables > Actions:
+#   SUPABASE_DB_URL     cadena de conexión "Session pooler" de Supabase (Connect > Session pooler)
+#   RESPALDO_CLAVE      una contraseña larga que usted invente, para cifrar la copia
+#
+# Para abrir una copia: gpg --decrypt respaldo.sql.gz.gpg | gunzip > respaldo.sql
+name: Respaldo semanal
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # lunes 3:00 a. m. en El Salvador
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+    steps:
+      - name: Revisar que existan los secretos
+        id: listo
+        run: |
+          if [ -n "$SUPABASE_DB_URL" ] && [ -n "$RESPALDO_CLAVE" ]; then
+            echo "ok=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "Faltan los secretos SUPABASE_DB_URL o RESPALDO_CLAVE: no se hace respaldo."
+          fi
+
+      - name: Instalar pg_dump (PostgreSQL 17)
+        if: steps.listo.outputs.ok == 'si'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Copiar y cifrar
+        if: steps.listo.outputs.ok == 'si'
+        run: |
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" --schema=public --no-owner --no-privileges \
+            | gzip \
+            | gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$RESPALDO_CLAVE" -o respaldo.sql.gz.gpg
+          ls -lh respaldo.sql.gz.gpg
+
+      - name: Guardar la copia cifrada
+        if: steps.listo.outputs.ok == 'si'
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-llavecita-${{ github.run_id }}
+          path: respaldo.sql.gz.gpg
+          retention-days: 90

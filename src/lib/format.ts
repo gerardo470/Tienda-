@@ -82,3 +82,33 @@ export function inicioMesISO(): string {
 // El Salvador no cambia la hora: siempre es UTC−6.
 export const inicioDelDia = (iso: string) => `${iso}T00:00:00-06:00`;
 export const finDelDia = (iso: string) => `${iso}T23:59:59.999-06:00`;
+
+// ----- Fechas sin hora ("2026-11-13"), usadas en servicios -----
+const aMediodia = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00-06:00`);
+
+/** "Nov 2026" */
+export function mesAnio(iso: string): string {
+  const t = new Intl.DateTimeFormat(LOCALE, { timeZone: ZONA, month: 'short', year: 'numeric' }).format(aMediodia(iso)).replace('.', '');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/** "13 nov 2026" a partir de una fecha sin hora */
+export function fechaDia(iso: string): string {
+  return fechaCorta(aMediodia(iso));
+}
+
+/** Días que faltan para una fecha (negativo si ya pasó). */
+export function diasHasta(iso: string): number {
+  return Math.round((aMediodia(iso).getTime() - aMediodia(hoyISO()).getTime()) / 86400000);
+}
+
+/** 120000 -> "120,000 km" */
+export function km(n: number): string {
+  return `${new Intl.NumberFormat('en-US').format(n)} km`;
+}
+
+/** Solo dígitos; a los números locales de 8 dígitos se les antepone 503 (El Salvador). */
+export function numeroWhatsApp(texto: string): string {
+  const d = texto.replace(/\D/g, '');
+  return d.length === 8 ? `503${d}` : d;
+}

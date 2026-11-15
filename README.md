@@ -1,58 +1,75 @@
 # Llavecita
 
-La ayudante de su taller. Por ahora tiene el módulo de **Caja Chica**; está armada por módulos para agregar después órdenes de trabajo, clientes e inventario.
+La ayudante de su taller. Tiene los módulos de **Caja Chica** y **Clientes** (vehículos e historial de servicios), con usuarios por rol. Está armada por módulos para seguir agregando.
 
 Es una aplicación web que se instala en el teléfono Android como si fuera una app normal (PWA).
 
 ---
 
-## Guía de puesta en marcha (sin saber de bases de datos)
+## Dónde vive cada cosa
 
-Son tres partes: **Supabase** (donde se guardan los datos), **Vercel** (donde vive la app) e **instalarla en el teléfono**. Las dos cuentas son gratis. Calcule unos 20 minutos.
+- **App publicada:** <https://tienda-black-nine.vercel.app> (Vercel, proyecto `tienda`).
+- **Datos:** Supabase, proyecto `psjahflasdnryynqkswh`.
+- **Código:** este repositorio. Lo que llega a la rama `main` se publica solo en Vercel en 1–2 minutos.
 
-### Parte 1 · Supabase (la base de datos)
+## Cómo hacer cambios y volver a desplegar
 
-1. Entre a <https://supabase.com> y toque **Start your project**. Cree la cuenta con su correo o con GitHub.
-2. Toque **New project** y llene:
-   - **Name:** `llavecita`
-   - **Database Password:** invente una contraseña y guárdela (no la va a usar a diario).
-   - **Region:** la más cercana, por ejemplo *East US (North Virginia)*.
-   - Toque **Create new project** y espere 1–2 minutos.
-3. **Crear las tablas.** En el menú de la izquierda abra **SQL Editor** → **New query**. Abra el archivo [`supabase/schema.sql`](supabase/schema.sql) de este proyecto, copie **todo** su contenido, péguelo y toque **Run**. Debe decir *Success. No rows returned*.
-4. **Crear su usuario.** Vaya a **Authentication** → **Users** → **Add user** → **Create new user**. Escriba su correo y una contraseña, deje marcado **Auto Confirm User** y toque **Create user**. Con ese correo y contraseña va a entrar a Llavecita.
-5. **Cerrar la puerta a extraños (recomendado).** En **Authentication** → **Sign In / Providers** apague **Allow new users to sign up** y guarde. Así nadie más puede crearse una cuenta.
-6. **Copiar las dos claves.** Vaya a **Project Settings** (el engranaje) → **API** (o **API Keys** / **Data API**) y copie:
-   - **Project URL** — se ve así: `https://abcdefgh.supabase.co`
-   - **anon public key** (también llamada *publishable key*) — un texto largo.
+1. Cambie el código en una rama y ábrale una solicitud de cambios (pull request) hacia `main`.
+2. Al aprobarla (**Merge**), Vercel publica la versión nueva sola. No hay que hacer nada más.
+3. Si el cambio trae tablas o reglas nuevas, van en un archivo nuevo dentro de `supabase/migrations/` (ver abajo) y se aplican **antes** de aprobar la solicitud.
 
-   > La clave *anon* es pública y no da acceso a sus datos por sí sola: la seguridad la ponen su contraseña y las reglas del paso 3. **Nunca** use ni comparta la clave `service_role` / *secret*.
+Las dos claves de Supabase (`VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`) viven en Vercel → Settings → Environment Variables. Nunca se escriben en el código.
 
-### Parte 2 · Vercel (publicar la app)
+### Migraciones de la base de datos
 
-1. Entre a <https://vercel.com> y toque **Sign Up** → **Continue with GitHub** (use la misma cuenta de GitHub donde está este proyecto).
-2. Toque **Add New…** → **Project**, busque el repositorio **Tienda-** y toque **Import**.
-3. Vercel detecta solo que es un proyecto **Vite**; no cambie nada de eso.
-4. Abra **Environment Variables** y agregue las dos claves de Supabase:
+Cada cambio a la base de datos es un archivo numerado en `supabase/migrations/`. Nunca se edita uno ya aplicado: se agrega uno nuevo.
 
-   | Name | Value |
-   | --- | --- |
-   | `VITE_SUPABASE_URL` | su *Project URL* |
-   | `VITE_SUPABASE_ANON_KEY` | su clave *anon public* |
+| Archivo | Qué hace |
+| --- | --- |
+| `20261113000000_caja_chica.sql` | Caja chica: sesiones, movimientos, bitácora y fotos de recibos |
+| `20261115000100_perfiles_roles.sql` | Usuarios y roles (admin, cajero, mecánico) |
+| `20261115000200_clientes.sql` | Clientes, vehículos, servicios y catálogo de tipos |
+| `20261116000100_respaldo_y_espacio.sql` | Restaurar respaldos, espacio usado y borrado de fotos |
 
-5. Toque **Deploy** y espere un minuto. Al terminar le da un enlace parecido a `https://tienda-xxxx.vercel.app`. **Ese es el enlace de su app.**
+Con la CLI de Supabase:
 
-> Vercel publica lo que está en la rama principal (`main`) del repositorio. Si el código todavía está en otra rama, primero hay que pasarlo a `main`.
+```bash
+npx supabase login
+npx supabase link --project-ref psjahflasdnryynqkswh
+npx supabase db push          # aplica las migraciones que falten
+```
 
-Si algún día cambia las claves, vaya a **Settings → Environment Variables** y luego a **Deployments → ⋯ → Redeploy**.
+Sin la CLI: pegue el archivo nuevo en Supabase → SQL Editor → Run. Todas las migraciones se pueden ejecutar más de una vez sin dañar nada.
 
-### Parte 3 · Instalarla en el Android
+- **Deshacer:** cada migración tiene su reversa en `supabase/rollback/`. La de clientes **borra datos**: úsela solo a propósito y con respaldo.
+- **Datos de ejemplo:** `supabase/seed.sql` es solo para una base local de pruebas (`npx supabase db reset`). Nunca se aplica en producción.
 
-1. Abra el enlace de Vercel en **Chrome** en su teléfono.
-2. Inicie sesión con el correo y la contraseña del paso 4 de Supabase.
-3. Toque los **tres puntitos** (arriba a la derecha) → **Instalar aplicación** (en algunos teléfonos dice **Agregar a pantalla principal**) → **Instalar**.
-4. Listo: el ícono naranja de **Llavecita** queda en su pantalla de inicio y abre a pantalla completa.
+### Planes gratuitos, respaldos y crecimiento
 
-La sesión queda guardada: no tiene que escribir la contraseña cada vez.
+Llavecita corre en los planes gratuitos de Supabase y Vercel. Los límites, qué pasa al alcanzarlos, cómo funcionan los respaldos y el "latido", y cómo pasar a Supabase Pro están en [`docs/limites.md`](docs/limites.md).
+
+- **Respaldo manual:** Ajustes → Respaldo y espacio.
+- **Respaldo automático semanal (opcional):** `.github/workflows/respaldo.yml`.
+- **Latido diario:** `api/latido.js`, programado en `vercel.json`.
+
+### Instalarla en un Android
+
+1. Abra <https://tienda-black-nine.vercel.app> en **Chrome**.
+2. Inicie sesión con su correo y contraseña.
+3. Tres puntitos (arriba a la derecha) → **Instalar aplicación** (o **Agregar a pantalla principal**) → **Instalar**.
+
+### Agregar un usuario
+
+1. Supabase → **Authentication** → **Users** → **Add user** → **Create new user** (correo, contraseña y **Auto Confirm User** marcado).
+2. En Llavecita: **Ajustes → Usuarios y roles**. La persona aparece como *Mecánico*; ahí se le pone nombre y rol.
+
+| Rol | Qué puede hacer |
+| --- | --- |
+| Administrador | Todo: caja, clientes, servicios, usuarios, bitácora |
+| Cajero | Maneja la caja chica y consulta clientes y servicios |
+| Mecánico | Consulta clientes y servicios, y registra servicios |
+
+Estas reglas las hace cumplir la base de datos (Row Level Security), no solo la pantalla.
 
 ---
 
@@ -64,7 +81,8 @@ La sesión queda guardada: no tiene que escribir la contraseña cada vez.
 - **Cerrar caja:** muestra el resumen, usted escribe el efectivo contado y le dice si sobra o falta. Una caja cerrada ya no se puede cambiar.
 - **Historial:** cajas cerradas con filtro por fechas. Dentro de cada una puede **compartir por WhatsApp** o bajar el **PDF** o el **Excel** (archivo CSV).
 - **Reportes:** totales del período y cuánto se fue en clientes y cuánto en el taller.
-- **Ajustes:** su nombre, mensajes y animaciones de Llavecita, modo oscuro y cerrar sesión.
+- **Clientes:** lista con buscador (nombre, teléfono o placa), ficha con botones de Llamar y WhatsApp, vehículos, historial de servicios por vehículo como línea de tiempo, registro rápido de servicio y PDF para compartir.
+- **Ajustes:** su nombre, mensajes y animaciones de Llavecita, modo oscuro, respaldo y espacio, usuarios y roles, tipos de servicio y cerrar sesión.
 
 Sin internet la app abre y muestra lo último guardado, pero para registrar hace falta conexión.
 
@@ -100,22 +118,25 @@ src/
     tipos.ts      la forma que debe tener un módulo
     registro.ts   lista de módulos activos  ← aquí se agregan los nuevos
     caja-chica/   pantallas, componentes, cálculos, datos y exportación
+    clientes/     clientes, vehículos, servicios, recordatorios y PDF
     ajustes/
-supabase/schema.sql   tablas, seguridad (RLS), reglas y bitácora
+supabase/migrations/  cambios de la base de datos, numerados
+supabase/rollback/    reversa de cada migración
+supabase/seed.sql     datos de ejemplo (solo desarrollo)
 ```
 
 ### Agregar un módulo nuevo
 
 1. Cree `src/modules/<nombre>/index.tsx` que exporte un `ModuloApp` (sus pantallas y sus botones de la barra inferior).
 2. Agréguelo a la lista de `src/modules/registro.ts`.
-3. Si necesita tablas, agréguelas en un archivo SQL nuevo dentro de `supabase/`.
+3. Si necesita tablas, agréguelas en una migración nueva dentro de `supabase/migrations/`.
 
 ### Datos y seguridad
 
-- Tablas `cash_sessions`, `cash_movements` y `audit_log`, todas con **Row Level Security**: cada usuario solo ve lo suyo.
-- Un índice único impide tener dos cajas abiertas.
+- Todas las tablas tienen **Row Level Security** con permisos por rol.
+- Un índice único impide tener dos cajas abiertas en el taller.
 - Los movimientos no se borran: se marcan con `deleted_at` / `deleted_by` (borrado lógico).
 - La base de datos escribe sola la bitácora (`audit_log`) al abrir, cerrar, crear, editar y eliminar; desde la app no se puede alterar.
 - Una caja cerrada queda bloqueada por la propia base de datos.
 - Las fotos de recibos van a un espacio privado (`recibos`) y se abren con enlaces temporales.
-- El campo "quién lo registró" ya existe en cada movimiento, listo para cuando haya ayudantes.
+- Clientes, vehículos y servicios también usan borrado lógico y quedan en la bitácora.

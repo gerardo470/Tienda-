@@ -156,5 +156,9 @@ export function crearRepoLocal(): RepoCaja {
     async urlRecibo(ruta) {
       return ruta;
     },
+
+    async borrarRecibo() {
+      /* en modo demostración la foto vive dentro del movimiento */
+    },
   };
 }

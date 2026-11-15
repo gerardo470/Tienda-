@@ -158,3 +158,35 @@ export const IconoSinSenal = (p: P) => (
     <circle cx="12" cy="20" r="0.6" />
   </Base>
 );
+export const IconoClientes = (p: P) => (
+  <Base {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.5a6.5 6.5 0 0 1 3.5 5.5" />
+  </Base>
+);
+export const IconoTelefono = (p: P) => (
+  <Base {...p}>
+    <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
+  </Base>
+);
+export const IconoChat = (p: P) => (
+  <Base {...p}>
+    <path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-5A8.5 8.5 0 1 1 21 11.5z" />
+  </Base>
+);
+export const IconoBuscar = (p: P) => (
+  <Base {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </Base>
+);
+export const IconoCampana = (p: P) => (
+  <Base {...p}>
+    <path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7 2.5 7h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0" />
+  </Base>
+);
+export const IconoSuma = (p: P) => (
+  <Base {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Base>
+);

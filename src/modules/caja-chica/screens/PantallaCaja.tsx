@@ -14,6 +14,7 @@ import { IconoCandado, IconoMas, IconoMenos, IconoSinSenal } from '../../../shar
 import { NumeroAnimado } from '../../../shared/ui/NumeroAnimado';
 import { Vacio } from '../../../shared/ui/Vacio';
 import { calcularTotales, gastoGrande, saldoBajo } from '../calculos';
+import { TarjetaRecordatorios } from '../../clientes/components/TarjetaRecordatorios';
 import { useCaja } from '../CajaProvider';
 import { BarraReparto } from '../components/BarraReparto';
 import { FormMovimiento } from '../components/FormMovimiento';
@@ -251,6 +252,8 @@ export function PantallaCaja() {
           Registrar Gasto
         </Boton>
       </div>
+
+      <TarjetaRecordatorios className="mx-4 mt-3" />
 
       <section className="flex flex-col gap-2 px-4 pb-6 pt-3">
         <div className="flex items-center justify-between gap-3">
